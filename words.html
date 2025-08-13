@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocab | Word Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1D1D1F',
+                        secondary: '#666666',
+                        accent: '#007AFF',
+                        light: {
+                            border: '#F3F4F6',
+                            highlight: '#FFFFFF',
+                            shadow: 'rgba(0, 0, 0, 0.15)',
+                        },
+                        dark: {
+                            main: '#2C2C2E',
+                            secondary: '#222223',
+                            active: '#2B4158',
+                            shadow: 'rgba(0, 0, 0, 0.4)',
+                        }
+                    },
+                    fontFamily: {
+                        system: [
+                            '-apple-system',
+                            'BlinkMacSystemFont',
+                            'Segoe UI',
+                            'Roboto',
+                            'Helvetica Neue',
+                            'Arial',
+                            'sans-serif'
+                        ],
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-balance {
+                text-wrap: balance;
+            }
+            .animate-fade-in {
+                animation: fadeIn 0.3s ease-in-out forwards;
+            }
+            .nav-transition {
+                transition: transform 0.3s ease, opacity 0.3s ease;
+            }
+            .btn-transition {
+                transition: all 0.3s ease;
+            }
+            /* 高亮单词样式 */
+            .word-highlight {
+                border-radius: 8px;
+                padding: 2px 6px;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                position: relative;
+            }
+            .light .word-highlight {
+                background-color: theme('colors.light.highlight');
+                color: theme('colors.primary');
+                box-shadow: 
+                    2px 2px 4px rgba(0, 0, 0, 0.15),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+                    inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+            }
+            .dark .word-highlight {
+                background-color: theme('colors.dark.active');
+                color: white;
+                box-shadow: 
+                    2px 2px 4px rgba(0, 0, 0, 0.35),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+                    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+            }
+            /* 列表项样式 */
+            .list-item:hover {
+                box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+                transform: translateX(2px);
+            }
+            .list-container {
+                max-height: 300px;
+                overflow-y: auto;
+                position: relative;
+            }
+            /* 滚动条样式 */
+            .list-container::-webkit-scrollbar {
+                width: 8px;
+            }
+            .list-container::-webkit-scrollbar-track {
+                background: transparent;
+                border-radius: 8px;
+            }
+            .list-container::-webkit-scrollbar-thumb {
+                background-color: rgba(102, 102, 102, 0.5);
+                border-radius: 8px;
+                border: 2px solid transparent;
+                background-clip: content-box;
+            }
+            .dark .list-container::-webkit-scrollbar-thumb {
+                background-color: rgba(43, 65, 88, 0.7);
+            }
+            
+            .word-center-container {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                flex-grow: 1;
+                width: 100%;
+                margin-top: 4rem;
+            }
+            .display-word {
+                font-family: theme('fontFamily.system');
+                font-weight: bold;
+                font-size: clamp(3.5rem, 10vw, 7rem);
+                color: #1D1D1F;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+            .dark .display-word {
+                color: #F5F5F7;
+            }
+            /* 控制按钮样式 */
+            .control-btn {
+                @apply rounded-full border-2 px-6 py-4 text-base tracking-widest transition-all duration-300 w-full sm:w-auto sm:flex-1 sm:max-w-[180px] flex items-center justify-center btn-transition;
+            }
+            .light .control-btn {
+                @apply border-primary bg-transparent hover:bg-primary hover:text-white;
+            }
+            .dark .control-btn {
+                @apply border-0 bg-dark-secondary hover:bg-dark-active text-white;
+            }
+            .btn-active {
+                @apply bg-primary text-white border-primary dark:bg-dark-active !important;
+            }
+            /* 无悬停效果按钮样式 */
+            .flat-btn {
+                @apply text-sm tracking-widest px-4 py-2 rounded-full bg-transparent dark:bg-dark-secondary transition-none;
+            }
+            .counter-container {
+                min-width: 120px;
+                display: inline-flex;
+                justify-content: center;
+            }
+            .counter-text {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+            }
+            /* 列表项平滑过渡效果 */
+            .list-item {
+                transition: all 0.3s ease-out;
+                opacity: 0.9;
+            }
+            /* 磨砂玻璃遮罩层 */
+            .overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 45;
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                backdrop-filter: blur(8px);
+            }
+            .overlay.active {
+                opacity: 1;
+                pointer-events: auto;
+            }
+            .light .overlay {
+                background-color: rgba(255, 255, 255, 0.5);
+            }
+            .dark .overlay {
+                background-color: rgba(44, 44, 46, 0.7);
+            }
+            /* 汉堡菜单样式 */
+            .hamburger-menu {
+                position: fixed;
+                top: 1rem;
+                right: 1rem;
+                z-index: 60;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                transition: all 0.3s ease;
+            }
+            .light .hamburger-menu {
+                background: white;
+            }
+            .dark .hamburger-menu {
+                background: theme('colors.dark.secondary');
+                color: white;
+            }
+            .mobile-nav {
+                position: fixed;
+                top: 0;
+                right: 0;
+                height: 100vh;
+                width: 80%;
+                max-width: 300px;
+                z-index: 55;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+                padding-top: 3rem;
+            }
+            .light .mobile-nav {
+                background: white;
+            }
+            .dark .mobile-nav {
+                background: theme('colors.dark.secondary');
+                color: white;
+            }
+            .mobile-nav.active {
+                transform: translateX(0);
+            }
+            .mobile-nav-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 50;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease;
+            }
+            .mobile-nav-overlay.active {
+                opacity: 1;
+                pointer-events: auto;
+            }
+            .mobile-nav-item {
+                @apply px-6 py-4 border-b transition-colors;
+            }
+            .light .mobile-nav-item {
+                @apply border-gray-100 hover:bg-gray-50;
+            }
+            .dark .mobile-nav-item {
+                @apply border-gray-800 hover:bg-dark-active/30;
+            }
+            
+            /* 下拉菜单样式 */
+            .dropdown {
+                position: relative;
+                display: inline-block;
+            }
+            .dropdown-content {
+                position: absolute;
+                top: 100%;
+                right: 0;
+                min-width: 180px;
+                box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                z-index: 100;
+                border-radius: 8px;
+                overflow: hidden;
+                transform-origin: top right;
+                transform: scale(0.95);
+                opacity: 0;
+                pointer-events: none;
+                transition: all 0.2s ease;
+            }
+            .light .dropdown-content {
+                background-color: white;
+                color: #1D1D1F;
+            }
+            .dark .dropdown-content {
+                background-color: theme('colors.dark.secondary');
+                color: white;
+            }
+            .dropdown-content.active {
+                transform: scale(1);
+                opacity: 1;
+                pointer-events: auto;
+            }
+            .dropdown-item {
+                @apply px-4 py-3 text-sm cursor-pointer transition-colors;
+            }
+            .light .dropdown-item {
+                @apply hover:bg-gray-100;
+            }
+            .dark .dropdown-item {
+                @apply hover:bg-dark-active/30;
+            }
+            .separator {
+                @apply border-t border-gray-200 dark:border-gray-700 my-1;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="font-inter bg-white text-primary antialiased dark:bg-dark-main dark:text-white min-h-screen flex flex-col transition-colors duration-300 light">
+    <!-- 磨砂玻璃遮罩层 -->
+    <div id="overlay" class="overlay"></div>
+    
+    <!-- 移动端汉堡菜单按钮 -->
+    <button id="hamburger-btn" class="hamburger-menu md:hidden">
+        <i class="fa-solid fa-bars text-xl"></i>
+    </button>
+    
+    <!-- 移动端导航菜单 -->
+    <div id="mobile-nav" class="mobile-nav">
+        <!-- 1. 书本菜单 (RA-600词) -->
+        <div class="mobile-nav-item">
+            <div class="flex items-center justify-between">
+                <button id="mobile-book-toggle" class="w-full text-left">
+                    <span id="mobile-current-book">RA-7000词</span>
+                </button>
+                <i class="fa-solid fa-chevron-down text-xs"></i>
+            </div>
+        </div>
+        
+   <!-- 移动端书本子菜单 -->
+        <div id="mobile-book-submenu" class="hidden pl-10">
+            <!-- 动态生成的词书选项将在这里插入 -->
+            <div class="separator"></div>
+        </div>
+        
+        <!-- 2. 模式切换 -->
+        <div class="mobile-nav-item">
+            <button id="mobile-mode-toggle" class="w-full text-left">RA-7000词 ALL LIST</button>
+        </div>
+        
+        <!-- 3. Export -->
+        <div class="mobile-nav-item">
+            <button id="mobile-export-btn" class="w-full text-left">Export</button>
+        </div>
+        
+        <!-- 4. 发音源菜单 (美音) -->
+        <div class="mobile-nav-item">
+            <div class="flex items-center justify-between">
+                <button id="mobile-pron-toggle" class="w-full text-left">
+                    <span id="mobile-current-pron">美音</span>
+                </button>
+                <i class="fa-solid fa-chevron-down text-xs"></i>
+            </div>
+        </div>
+        
+        <!-- 移动端发音源子菜单 -->
+        <div id="mobile-pron-submenu" class="hidden pl-10">
+            <div class="mobile-nav-item py-3">
+                <button class="mobile-pron-item w-full text-left" data-pron-type="2">美音</button>
+            </div>
+            <div class="mobile-nav-item py-3">
+                <button class="mobile-pron-item w-full text-left" data-pron-type="1">英音</button>
+            </div>
+            <div class="separator"></div>
+        </div>
+        
+        <!-- 其他功能菜单 (排在后面) -->
+        <div class="mobile-nav-item">
+            <button id="mobile-immersive-toggle" class="w-full text-left flex items-center">
+                <i class="fa-solid fa-expand mr-2"></i> Immersive
+            </button>
+        </div>
+        <div class="mobile-nav-item">
+            <button id="mobile-dark-mode-toggle" class="w-full text-left flex items-center">
+                <i class="fa-regular fa-moon mr-2"></i> Dark mode
+            </button>
+        </div>
+    </div>
+    
+    <!-- 移动端导航遮罩层 -->
+    <div id="mobile-nav-overlay" class="mobile-nav-overlay"></div>
+    
+    <!-- 导航栏 -->
+    <header id="navbar" class="fixed w-full z-50 nav-transition py-4 bg-white/90 dark:bg-dark-main/90 backdrop-blur-sm shadow-sm">
+        <div class="container mx-auto px-6 md:px-12 flex flex-wrap items-center justify-between gap-4">
+            <a href="#" class="text-2xl font-bold tracking-tight flex items-center h-10">VOCAB</a>
+            
+            <!-- 桌面端布局 -->
+            <div class="hidden md:flex items-center w-auto">
+                <div class="relative mr-4 w-64 lg:w-80 z-50">
+                    <!-- 搜索框 -->
+                    <input type="text" id="search-input" placeholder="Word 1 of 0" 
+                        class="text-sm border border-light-border dark:border-dark-active bg-transparent dark:bg-dark-secondary px-5 py-2.5 pl-10 focus:outline-none focus:ring-2 focus:ring-light-border dark:focus:ring-dark-active transition-all duration-300 w-full rounded-full">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    
+                    <!-- 搜索结果列表 -->
+                    <div id="word-list-container" class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-dark-secondary shadow-lg rounded-xl z-50 animate-fade-in overflow-hidden">
+    <div id="list-container" class="list-container p-2">
+        <ul id="word-list" class="divide-y divide-gray-200 dark:divide-gray-700 text-left">
+            <!-- 单词将在这里插入 -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 桌面端导航按钮 -->
+                <div class="flex items-center">
+                                 <!-- 书本下拉菜单 -->
+                    <div class="dropdown mr-4">
+                        <button id="book-selector" class="flat-btn flex items-center">
+                            <span id="current-book">RA-7000词</span>
+                            <i class="fa-solid fa-chevron-down ml-1 text-xs"></i>
+                        </button>
+                        <div id="book-dropdown" class="dropdown-content">
+                            <!-- 动态生成的词书选项将在这里插入 -->
+                        </div>
+                    </div>
+                    
+                    <button id="mode-toggle" class="flat-btn mr-4">
+                        RA-7000词 ALL LIST
+                    </button>
+                    
+                    <button id="export-btn" class="flat-btn mr-4">
+                        Export
+                    </button>
+                    
+                    <!-- 发音源下拉菜单 -->
+                    <div class="dropdown mr-4">
+                        <button id="pron-source-selector" class="flat-btn flex items-center">
+                            <span id="current-pron-source">美音</span>
+                            <i class="fa-solid fa-chevron-down ml-1 text-xs"></i>
+                        </button>
+                        <div id="pron-source-dropdown" class="dropdown-content">
+                            <div class="dropdown-item" data-pron-type="2">美音</div>
+                            <div class="dropdown-item" data-pron-type="1">英音</div>
+                        </div>
+                    </div>
+                    
+                    <button id="immersive-toggle" class="text-xl mr-4 hover:text-accent transition-colors">
+                        <i class="fa-solid fa-expand"></i>
+                    </button>
+                    
+                    <button id="dark-mode-toggle" class="text-xl mr-4">
+                        <i class="fa-regular fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 移动端搜索框 -->
+        <div class="container mx-auto px-6 mt-4 md:hidden flex items-center w-full">
+            <div class="relative w-full z-50">
+                <input type="text" id="mobile-search-input" placeholder="Word 1 of 0" 
+                    class="text-sm border border-light-border dark:border-dark-active bg-transparent dark:bg-dark-secondary px-5 py-2.5 pl-10 focus:outline-none focus:ring-2 focus:ring-light-border dark:focus:ring-dark-active transition-all duration-300 w-full rounded-full">
+                <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                
+              <!-- 移动端搜索结果容器 -->
+<div id="mobile-word-list-container" class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-dark-secondary shadow-lg rounded-xl z-50 animate-fade-in overflow-hidden">
+    <div id="mobile-list-container" class="list-container p-2">
+        <ul id="mobile-word-list" class="divide-y divide-gray-200 dark:divide-gray-700 text-left">
+            <!-- 单词将在这里插入 -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <button id="exit-immersive-btn" class="fixed top-4 right-6 z-40 text-lg bg-transparent dark:bg-dark-secondary text-secondary dark:text-gray-400 p-2 rounded-full shadow-lg hidden hover:text-accent dark:hover:text-accent transition-colors">
+        <i class="fa-solid fa-compress"></i>
+    </button>
+
+    <!-- 主要内容区 -->
+    <section class="flex-grow flex flex-col items-center justify-center relative overflow-hidden pt-24 pb-24 transition-colors duration-300 dark:bg-dark-main">
+        <div class="container mx-auto px-6 md:px-12 flex-grow flex flex-col items-center justify-center">
+            <!-- 单词显示区域 -->
+            <div class="word-center-container mb-16">
+                <h1 id="word-display" class="display-word leading-tight mb-6 animate-fade-in text-center">
+                    abandon
+                </h1>
+                <div id="phonetic" class="text-[clamp(1.2rem,3vw,1.5rem)] font-light text-secondary dark:text-gray-400 max-w-2xl mx-auto text-balance text-center">
+                    <p>/əˈbændən/</p>
+                    <p id="translation"></p>
+                </div>
+            </div>
+            
+            <!-- 控制按钮 -->
+            <div id="controls" class="w-full max-w-4xl mx-auto px-6 mt-auto">
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+                    <button id="prev-btn" class="control-btn">
+                        <i class="fa-solid fa-backward mr-2"></i> Previous
+                    </button>
+                    <button id="play-btn" class="control-btn">
+                        <i class="fa-solid fa-play mr-2"></i> Play
+                    </button>
+                    <button id="next-btn" class="control-btn">
+                        <i class="fa-solid fa-forward mr-2"></i> Next
+                    </button>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button id="slow-btn" class="control-btn">
+                        <i class="fa-solid fa-clock mr-2"></i> Slow
+                    </button>
+                    <button id="auto-play-btn" class="control-btn">
+                        <i class="fa-solid fa-repeat mr-2"></i> Auto play
+                    </button>
+                    <button id="add-btn" class="control-btn">
+                        <i class="fa-solid fa-heart mr-2"></i> Add
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        const STORAGE_PREFIX = 'vocab_app_';
+        const AUDIO_CACHE_DB = 'audio_cache';
+        const AUDIO_STORE_NAME = 'audio_files';
+        const BATCH_SIZE = 100;
+        
+                // 从JSON文件加载数据
+        let wordBooks = {};
+        let wordPhonetics = {};
+        let wordTranslations = {};
+        
+                // 初始化数据加载函数
+        async function loadDataFromJson() {
+            try {
+                // 显示加载状态
+                console.log('开始加载JSON数据...');
+                console.log('当前页面URL:', window.location.href);
+                console.log('检测到协议:', window.location.protocol);
+                
+                // 如果是file://协议，显示提示
+                if (window.location.protocol === 'file:') {
+                    console.warn('警告: 使用file://协议可能导致加载失败，请使用HTTP服务器');
+                    const protocolNote = document.createElement('div');
+                    protocolNote.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-white px-5 py-3 rounded-full shadow-lg z-50';
+                    protocolNote.textContent = '请使用HTTP服务器打开（如python -m http.server）';
+                    document.body.appendChild(protocolNote);
+                    setTimeout(() => protocolNote.remove(), 8000);
+                }
+                
+                // 加载单词库
+                console.log('加载wordBooks.json...');
+                const wordsResponse = await fetch('wordBooks.json');
+                console.log('wordBooks响应状态:', wordsResponse.status, wordsResponse.statusText);
+                
+                if (!wordsResponse.ok) {
+                    if (wordsResponse.status === 0) {
+                        throw new Error('无法加载文件，可能是浏览器安全限制');
+                    } else {
+                        throw new Error(`单词库加载失败: HTTP ${wordsResponse.status}`);
+                    }
+                }
+                
+                // 验证响应内容类型
+                const wordsContentType = wordsResponse.headers.get('content-type');
+                console.log('wordBooks内容类型:', wordsContentType);
+                if (!wordsContentType || !wordsContentType.includes('application/json')) {
+                    throw new Error('单词库不是有效的JSON文件');
+                }
+                
+                wordBooks = await wordsResponse.json();
+                console.log('wordBooks加载成功，包含', Object.keys(wordBooks).length, '个单词表');
+                
+                // 加载音标库
+                console.log('加载wordPhonetics.json...');
+                const phoneticsResponse = await fetch('wordPhonetics.json');
+                console.log('wordPhonetics响应状态:', phoneticsResponse.status);
+                
+                if (!phoneticsResponse.ok) throw new Error(`音标库加载失败: HTTP ${phoneticsResponse.status}`);
+                wordPhonetics = await phoneticsResponse.json();
+                console.log('wordPhonetics加载成功，包含', Object.keys(wordPhonetics).length, '个音标');
+                
+                // 加载翻译库
+                console.log('加载wordTranslations.json...');
+                const translationsResponse = await fetch('wordTranslations.json');
+                console.log('wordTranslations响应状态:', translationsResponse.status);
+                
+                if (!translationsResponse.ok) throw new Error(`翻译库加载失败: HTTP ${translationsResponse.status}`);
+                wordTranslations = await translationsResponse.json();
+                console.log('wordTranslations加载成功，包含', Object.keys(wordTranslations).length, '个翻译');
+                
+                console.log('所有数据加载成功');
+                return true; // 加载成功
+            } catch (error) {
+                console.error('数据加载错误:', error.message, error.stack);
+                // 显示详细错误通知
+                const notification = document.createElement('div');
+                notification.className = 'fixed bottom-6 right-6 bg-red-600 text-white px-5 py-3 rounded-lg shadow-lg z-50 max-w-xs';
+                notification.innerHTML = `数据加载失败:<br>${error.message}<br>查看控制台获取更多信息`;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 10000);
+                
+                // 重置数据
+                wordBooks = {};
+                wordPhonetics = {};
+                wordTranslations = {};
+                return false; // 加载失败
+            }
+        }
+        const appState = {
+              currentBook: 'ra7000', // 默认RA-7000词
+            currentPronType: '2', // 2:美音, 1:英音
+            // 使用getter确保获取最新的加载数据
+            get wordBooks() { return wordBooks; },
+            get wordPhonetics() { return wordPhonetics; },
+            get wordTranslations() { return wordTranslations; },
+            collectedWords: {},
+            currentMode: 'all',
+            modeIndices: {},
+            isImmersive: false,
+            isDarkMode: false, // 默认白色主题
+            isPlaying: false,
+            isAutoPlaying: false,
+            isSlow: false,
+            audioElement: null,
+            cacheProgress: 0,
+            isCaching: false,
+            autoPlayTimer: null,
+            navigationTimer: null,
+            userActionTimer: null,
+            isUserActive: false,
+            elements: {},
+            
+            get currentWordList() {
+                const bookWords = this.wordBooks[this.currentBook] || [];
+                return this.currentMode === 'collected' ? this.getCollectedWords() : bookWords;
+            },
+            
+            get currentIndex() {
+                const key = `${this.currentBook}-${this.currentMode}`;
+                return this.modeIndices[key] || 0;
+            },
+            
+            set currentIndex(value) {
+                const key = `${this.currentBook}-${this.currentMode}`;
+                const list = this.currentWordList;
+                const clamped = Math.max(0, Math.min(value, list.length - 1));
+                this.modeIndices[key] = clamped;
+                localStorage.setItem(`${STORAGE_PREFIX}index-${key}`, clamped);
+            },
+            
+            get currentWord() {
+                const list = this.currentWordList;
+                return list.length > 0 ? list[this.currentIndex] : null;
+            },
+            
+            getCollectedWords() {
+                return this.collectedWords[this.currentBook] || [];
+            },
+            
+            initCollectedWords() {
+                const books = Object.keys(this.wordBooks);
+                books.forEach(book => {
+                    if (!this.collectedWords[book]) {
+                        this.collectedWords[book] = [];
+                    }
+                });
+            }
+        };
+
+        // 初始化音频缓存数据库
+        function initAudioCacheDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(AUDIO_CACHE_DB, 2);
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(AUDIO_STORE_NAME)) {
+                        db.createObjectStore(AUDIO_STORE_NAME, { keyPath: ['word', 'pronType'] });
+                    }
+                };
+                
+                request.onsuccess = (event) => {
+                    resolve(event.target.result);
+                };
+                
+                request.onerror = (event) => {
+                    console.error('Error opening audio cache database:', event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        // 检查音频缓存
+        function checkAudioCache(word, pronType) {
+            return new Promise((resolve, reject) => {
+                initAudioCacheDB().then(db => {
+                    const transaction = db.transaction(AUDIO_STORE_NAME, 'readonly');
+                    const store = transaction.objectStore(AUDIO_STORE_NAME);
+                    const request = store.get([word, pronType]);
+                    
+                    request.onsuccess = () => {
+                        resolve(request.result ? request.result.blob : null);
+                        db.close();
+                    };
+                    
+                    request.onerror = (event) => {
+                        console.error('Error checking audio cache:', event.target.error);
+                        reject(event.target.error);
+                        db.close();
+                    };
+                }).catch(error => {
+                    reject(error);
+                });
+            });
+        }
+
+        // 缓存音频
+        function cacheAudio(word, pronType, blob) {
+            return new Promise((resolve, reject) => {
+                initAudioCacheDB().then(db => {
+                    const transaction = db.transaction(AUDIO_STORE_NAME, 'readwrite');
+                    const store = transaction.objectStore(AUDIO_STORE_NAME);
+                    
+                    const request = store.put({
+                        word: word,
+                        pronType: pronType,
+                        blob: blob,
+                        timestamp: new Date().getTime()
+                    });
+                    
+                    request.onsuccess = () => {
+                        resolve();
+                        db.close();
+                    };
+                    
+                    request.onerror = (event) => {
+                        console.error('Error caching audio:', event.target.error);
+                        reject(event.target.error);
+                        db.close();
+                    };
+                }).catch(error => {
+                    reject(error);
+                });
+            });
+        }
+
+        // 获取并缓存音频
+        function fetchAndCacheAudio(word, pronType) {
+            return new Promise((resolve, reject) => {
+                const url = `http://dict.youdao.com/dictvoice?audio=${encodeURIComponent(word)}&type=${pronType}`;
+                
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        return response.blob();
+                    })
+                    .then(blob => {
+                        cacheAudio(word, pronType, blob)
+                            .then(() => resolve(blob))
+                            .catch(error => {
+                                console.error('Failed to cache audio, but will still play:', error);
+                                resolve(blob);
+                            });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching audio:', error);
+                        reject(error);
+                    });
+            });
+        }
+
+        // 批量缓存音频
+        function cacheAudioBatch(startIndex) {
+            if (appState.isCaching) return;
+            
+            const currentBookWords = appState.wordBooks[appState.currentBook] || [];
+            const totalWords = currentBookWords.length;
+            const pronType = appState.currentPronType;
+            
+            if (startIndex >= totalWords) {
+                console.log(`All audio files for ${appState.currentBook} (${pronType === '2' ? '美音' : '英音'}) have been cached`);
+                appState.isCaching = false;
+                appState.cacheProgress = 0;
+                return;
+            }
+            
+            appState.isCaching = true;
+            appState.cacheProgress = startIndex;
+            
+            const endIndex = Math.min(startIndex + BATCH_SIZE, totalWords);
+            const batchWords = currentBookWords.slice(startIndex, endIndex);
+            
+            console.log(`Caching ${appState.currentBook} (${pronType === '2' ? '美音' : '英音'}) words ${startIndex + 1} to ${endIndex} of ${totalWords}`);
+            
+            const cachePromises = batchWords.map(word => {
+                return checkAudioCache(word, pronType)
+                    .then(cachedBlob => {
+                        if (!cachedBlob) return fetchAndCacheAudio(word, pronType);
+                        return Promise.resolve();
+                    })
+                    .catch(error => {
+                        console.error(`Failed to cache ${word}:`, error);
+                        return Promise.resolve();
+                    });
+            });
+            
+            Promise.all(cachePromises)
+                .then(() => {
+                    console.log(`Completed caching ${appState.currentBook} batch ${startIndex + 1}-${endIndex}`);
+                    appState.isCaching = false;
+                    setTimeout(() => cacheAudioBatch(endIndex), 1000);
+                })
+                .catch(error => {
+                    console.error('Batch caching failed:', error);
+                    appState.isCaching = false;
+                    setTimeout(() => cacheAudioBatch(startIndex), 5000);
+                });
+        }
+
+        function initElements() {
+            appState.elements = {
+                // 导航栏元素
+                navbar: document.getElementById('navbar'),
+                immersiveToggle: document.getElementById('immersive-toggle'),
+                exitImmersiveBtn: document.getElementById('exit-immersive-btn'),
+                darkModeToggle: document.getElementById('dark-mode-toggle'),
+                
+                // 模式切换
+                modeToggle: document.getElementById('mode-toggle'),
+                mobileModeToggle: document.getElementById('mobile-mode-toggle'),
+                
+                // 搜索相关
+                searchInput: document.getElementById('search-input'),
+                mobileSearchInput: document.getElementById('mobile-search-input'),
+                wordListContainer: document.getElementById('word-list-container'),
+                mobileWordListContainer: document.getElementById('mobile-word-list-container'),
+                wordList: document.getElementById('word-list'),
+                mobileWordList: document.getElementById('mobile-word-list'),
+                listContainer: document.getElementById('list-container'),
+                mobileListContainer: document.getElementById('mobile-list-container'),
+                
+                // 单词显示
+                wordDisplay: document.getElementById('word-display'),
+                phonetic: document.getElementById('phonetic'),
+                translation: document.getElementById('translation'), // 添加翻译元素引用
+                
+                // 控制按钮
+                prevBtn: document.getElementById('prev-btn'),
+                playBtn: document.getElementById('play-btn'),
+                nextBtn: document.getElementById('next-btn'),
+                slowBtn: document.getElementById('slow-btn'),
+                autoPlayBtn: document.getElementById('auto-play-btn'),
+                addBtn: document.getElementById('add-btn'),
+                exportBtn: document.getElementById('export-btn'),
+                mobileExportBtn: document.getElementById('mobile-export-btn'),
+                
+                // 移动端导航
+                hamburgerBtn: document.getElementById('hamburger-btn'),
+                mobileNav: document.getElementById('mobile-nav'),
+                mobileNavOverlay: document.getElementById('mobile-nav-overlay'),
+                mobileImmersiveToggle: document.getElementById('mobile-immersive-toggle'),
+                mobileDarkModeToggle: document.getElementById('mobile-dark-mode-toggle'),
+                
+                // 书本相关
+                bookSelector: document.getElementById('book-selector'),
+                currentBook: document.getElementById('current-book'),
+                bookDropdown: document.getElementById('book-dropdown'),
+                bookDropdownItems: document.querySelectorAll('.dropdown-item[data-book]'),
+                mobileBookToggle: document.getElementById('mobile-book-toggle'),
+                mobileCurrentBook: document.getElementById('mobile-current-book'),
+                mobileBookSubmenu: document.getElementById('mobile-book-submenu'),
+                mobileBookItems: document.querySelectorAll('.mobile-book-item'),
+                
+                // 发音源相关
+                pronSourceSelector: document.getElementById('pron-source-selector'),
+                currentPronSource: document.getElementById('current-pron-source'),
+                pronSourceDropdown: document.getElementById('pron-source-dropdown'),
+                pronSourceItems: document.querySelectorAll('.dropdown-item[data-pron-type]'),
+                mobilePronToggle: document.getElementById('mobile-pron-toggle'),
+                mobileCurrentPron: document.getElementById('mobile-current-pron'),
+                mobilePronSubmenu: document.getElementById('mobile-pron-submenu'),
+                mobilePronItems: document.querySelectorAll('.mobile-pron-item')
+            };
+        }
+
+        // 更新书本下拉菜单，隐藏当前选中项
+        function updateBookDropdown() {
+            // 桌面端书本下拉菜单
+            appState.elements.bookDropdownItems.forEach(item => {
+                if (item.dataset.book === appState.currentBook) {
+                    item.style.display = 'none';
+                } else {
+                    item.style.display = 'block';
+                }
+            });
+            
+            // 移动端书本子菜单
+            appState.elements.mobileBookItems.forEach(item => {
+                if (item.dataset.book === appState.currentBook) {
+                    item.parentElement.style.display = 'none';
+                } else {
+                    item.parentElement.style.display = 'block';
+                }
+            });
+        }
+
+        // 更新发音源下拉菜单，隐藏当前选中项
+        function updatePronDropdown() {
+            // 桌面端发音源下拉菜单
+            appState.elements.pronSourceItems.forEach(item => {
+                if (item.dataset.pronType === appState.currentPronType) {
+                    item.style.display = 'none';
+                } else {
+                    item.style.display = 'block';
+                }
+            });
+            
+            // 移动端发音源子菜单
+            appState.elements.mobilePronItems.forEach(item => {
+                if (item.dataset.pronType === appState.currentPronType) {
+                    item.parentElement.style.display = 'none';
+                } else {
+                    item.parentElement.style.display = 'block';
+                }
+            });
+        }
+
+        // 更新模式切换按钮文字
+        function updateModeButtonText() {
+            const bookName = getBookDisplayName(appState.currentBook);
+            const modeText = appState.currentMode === 'all' ? 'ALL LIST' : 'COLLECTED';
+            const fullText = `${bookName} ${modeText}`;
+            
+            appState.elements.modeToggle.textContent = fullText;
+            appState.elements.mobileModeToggle.textContent = fullText;
+        }
+
+                                     async function initApp() {
+            // 先加载JSON数据
+            const loadSuccess = await loadDataFromJson();
+            
+            // 检查本地存储的书籍是否存在于加载的数据中
+            const lastBook = localStorage.getItem(`${STORAGE_PREFIX}currentBook`) || 'ra7000';
+            if (!wordBooks[lastBook] && Object.keys(wordBooks).length > 0) {
+                // 如果存储的书籍不存在，使用第一个可用书籍
+                const firstBook = Object.keys(wordBooks)[0];
+                localStorage.setItem(`${STORAGE_PREFIX}currentBook`, firstBook);
+                console.log(`切换到可用书籍: ${firstBook}`);
+            }
+            
+            initElements();
+            initBookData();
+            initPronSource();
+            loadSettings();
+            updateModeUI();
+            updateWordDisplay();
+            renderWordList();
+            setupEventListeners();
+            setupUserActionHandling();
+            
+            // 初始化时更新下拉菜单，隐藏当前选中项
+            updateBookDropdown();
+            updatePronDropdown();
+            
+            // 数据加载失败时显示提示
+            if (!loadSuccess) {
+                appState.elements.wordDisplay.textContent = '数据加载失败';
+                appState.elements.phonetic.querySelector('p:first-child').textContent = '请检查JSON文件是否存在且格式正确';
+            }
+            
+            // 只有当有单词数据时才初始化缓存
+            if (Object.keys(wordBooks).length > 0) {
+                initAudioCacheDB().then(() => {
+                    console.log('Audio cache database initialized, starting cache...');
+                    setTimeout(() => cacheAudioBatch(appState.currentIndex), 3000);
+                }).catch(error => {
+                    console.error('Failed to initialize audio cache:', error);
+                });
+            }
+            
+            // 新增：动态生成词书列表
+            generateBookLists();
+            
+            setTimeout(() => scrollToHighlighted(), 100);
+        }
+// 添加动态生成词书列表的函数
+       function generateBookLists() {
+    const bookDropdown = document.getElementById('book-dropdown');
+    const mobileBookSubmenu = document.getElementById('mobile-book-submenu');
+    
+    // 清空现有内容
+    bookDropdown.innerHTML = '';
+    // 保留separator，清除其他内容
+    while (mobileBookSubmenu.firstChild && mobileBookSubmenu.firstChild.className !== 'separator') {
+        mobileBookSubmenu.removeChild(mobileBookSubmenu.firstChild);
+    }
+    
+    // 只添加wordBooks中存在的词书，直接使用键名作为标题
+    Object.keys(wordBooks).forEach(bookKey => {
+        // 直接使用键名作为显示标题
+        const bookTitle = bookKey;
+        
+        // 桌面端下拉菜单
+        const desktopItem = document.createElement('div');
+        desktopItem.className = 'dropdown-item';
+        desktopItem.dataset.book = bookKey;
+        desktopItem.textContent = bookTitle;
+        desktopItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            changeBook(bookKey);
+        });
+        bookDropdown.appendChild(desktopItem);
+        
+        // 移动端子菜单
+        const mobileItemContainer = document.createElement('div');
+        mobileItemContainer.className = 'mobile-nav-item py-3';
+        
+        const mobileItem = document.createElement('button');
+        mobileItem.className = 'mobile-book-item w-full text-left';
+        mobileItem.dataset.book = bookKey;
+        mobileItem.textContent = bookTitle;
+        mobileItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            changeBook(bookKey);
+        });
+        
+        mobileItemContainer.appendChild(mobileItem);
+        // 添加到separator前面
+        mobileBookSubmenu.insertBefore(mobileItemContainer, mobileBookSubmenu.firstChild);
+    });
+    
+    // 更新下拉菜单，隐藏当前选中项
+    updateBookDropdown();
+}
+        // 初始化书本数据
+        function initBookData() {
+            const savedCollected = localStorage.getItem(`${STORAGE_PREFIX}collectedWords`);
+            appState.collectedWords = savedCollected ? JSON.parse(savedCollected) : {};
+            appState.initCollectedWords();
+            
+            const books = Object.keys(wordBooks);
+            books.forEach(book => {
+                ['all', 'collected'].forEach(mode => {
+                    const key = `${book}-${mode}`;
+                    appState.modeIndices[key] = parseInt(localStorage.getItem(`${STORAGE_PREFIX}index-${key}`)) || 0;
+                });
+            });
+            
+            // 从本地存储获取最后选择的书本，如果没有则使用默认的RA-7000词
+            const lastBook = localStorage.getItem(`${STORAGE_PREFIX}currentBook`) || 'ra7000';
+            if (wordBooks[lastBook]) appState.currentBook = lastBook;
+            
+            appState.elements.currentBook.textContent = getBookDisplayName(lastBook);
+            appState.elements.mobileCurrentBook.textContent = getBookDisplayName(lastBook);
+            
+            // 初始化模式按钮文字
+            updateModeButtonText();
+        }
+
+        // 初始化发音源
+        function initPronSource() {
+            const lastPronType = localStorage.getItem(`${STORAGE_PREFIX}pronType`) || '2';
+            appState.currentPronType = lastPronType;
+            updatePronSourceDisplay();
+        }
+
+        // 更新发音源显示
+        function updatePronSourceDisplay() {
+            const isAmerican = appState.currentPronType === '2';
+            appState.elements.currentPronSource.textContent = isAmerican ? '美音' : '英音';
+            appState.elements.mobileCurrentPron.textContent = isAmerican ? '美音' : '英音';
+        }
+
+        // 获取书本显示名称
+      // 直接返回键名作为显示名称
+function getBookDisplayName(bookKey) {
+    return bookKey;
+}
+
+        function loadSettings() {
+            // 从本地存储获取暗色模式设置，默认关闭（白色主题）
+            appState.isDarkMode = localStorage.getItem(`${STORAGE_PREFIX}darkMode`) === 'true';
+            if (appState.isDarkMode) {
+                document.documentElement.classList.add('dark');
+                document.body.classList.remove('light');
+                appState.elements.darkModeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                appState.elements.mobileDarkModeToggle.innerHTML = '<i class="fa-solid fa-sun mr-2"></i> Dark mode';
+            }
+        }
+
+        function updateModeUI() {
+            // 更新模式按钮文字
+            updateModeButtonText();
+            
+            if (appState.currentMode === 'collected' && appState.getCollectedWords().length === 0) {
+                appState.elements.addBtn.disabled = true;
+                appState.elements.addBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                appState.elements.addBtn.disabled = false;
+                appState.elements.addBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // 修改更新单词显示的函数，添加翻译显示
+        function updateWordDisplay() {
+            const word = appState.currentWord;
+            const list = appState.currentWordList;
+            
+            // 更新单词显示
+            appState.elements.wordDisplay.textContent = word || (appState.currentMode === 'collected' ? 'No words collected' : 'No words available');
+            
+            // 显示音标和翻译
+            if (word) {
+                // 显示音标
+                appState.elements.phonetic.querySelector('p:first-child').textContent = 
+                    appState.wordPhonetics[word] || '';
+                
+                // 显示翻译（在音标下方）
+          let translationText = appState.wordTranslations[word] || '';
+// 按分号截取并取第一部分，再限制长度
+translationText = translationText.split(';')[0];
+// 简单长度限制
+if (translationText.length > 15) {
+    translationText = translationText.substring(0, 15) + '...';
+}
+appState.elements.translation.textContent = translationText;
+            } else {
+                appState.elements.phonetic.querySelector('p:first-child').textContent = '';
+                appState.elements.translation.textContent = '';
+            }
+            
+            // 更新搜索框占位符 - 收藏模式无单词时显示empty
+            let placeholderText;
+            if (appState.currentMode === 'collected' && list.length === 0) {
+                placeholderText = 'empty';
+            } else {
+                placeholderText = `Word ${appState.currentIndex + 1} of ${list.length}`;
+            }
+            appState.elements.searchInput.placeholder = placeholderText;
+            appState.elements.mobileSearchInput.placeholder = placeholderText;
+            
+            updateAddButtonState();
+            
+            if (!appState.isUserActive) scrollToHighlighted();
+        }
+
+        function updateAddButtonState() {
+            const word = appState.currentWord;
+            if (!word) return;
+            
+            const collectedWords = appState.getCollectedWords();
+            const isCollected = collectedWords.indexOf(word) !== -1;
+            
+            if (isCollected) {
+                appState.elements.addBtn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Added';
+                appState.elements.addBtn.classList.add('btn-active');
+            } else {
+                appState.elements.addBtn.innerHTML = '<i class="fa-solid fa-heart mr-2"></i> Add';
+                appState.elements.addBtn.classList.remove('btn-active');
+            }
+        }
+
+        function renderWordList(filter = '') {
+            const listElement = appState.elements.wordList;
+            const mobileListElement = appState.elements.mobileWordList;
+            const wordList = appState.currentWordList;
+            const currentWord = appState.currentWord;
+            
+            listElement.innerHTML = '';
+            mobileListElement.innerHTML = '';
+            
+            const filteredWords = filter 
+                ? wordList.filter(word => word.toLowerCase().includes(filter.toLowerCase()))
+                : wordList;
+            
+            if (filteredWords.length === 0) {
+                const emptyItem = document.createElement('li');
+                emptyItem.className = 'list-item py-2 px-4 text-center text-gray-500 dark:text-gray-400';
+                emptyItem.textContent = filter ? 'No matches found' : 'No words available';
+                
+                listElement.appendChild(emptyItem.cloneNode(true));
+                mobileListElement.appendChild(emptyItem);
+                return;
+            }
+            
+            filteredWords.forEach(word => {
+                const listItem = document.createElement('li');
+                listItem.className = 'list-item py-2 px-4 hover:bg-gray-100 dark:hover:bg-dark-active/30 transition-colors cursor-pointer';
+                const mobileListItem = listItem.cloneNode(false);
+                
+                if (word === currentWord) {
+                    const span = document.createElement('span');
+                    span.className = 'word-highlight';
+                    span.textContent = word;
+                    listItem.appendChild(span.cloneNode(true));
+                    mobileListItem.appendChild(span);
+                } else {
+                    listItem.textContent = word;
+                    mobileListItem.textContent = word;
+                }
+                
+               const handleClick = () => {
+                    const index = wordList.indexOf(word);
+                    if (index !== -1) {
+                        appState.currentIndex = index;
+                        updateWordDisplay();
+                        renderWordList(filter);
+                        userActionDetected();
+                        
+                        // 清空输入框并移除焦点
+                        appState.elements.searchInput.value = '';
+                        appState.elements.mobileSearchInput.value = '';
+                        appState.elements.searchInput.blur();
+                        appState.elements.mobileSearchInput.blur();
+                        
+                        playWord();
+                    }
+                    // 强制隐藏列表容器（直接操作DOM确保隐藏）
+                    appState.elements.wordListContainer.classList.add('hidden');
+                    appState.elements.mobileWordListContainer.classList.add('hidden');
+                    appState.elements.overlay.classList.remove('active');
+                };                
+                listItem.addEventListener('click', handleClick);
+                mobileListItem.addEventListener('click', handleClick);
+                
+                listElement.appendChild(listItem);
+                mobileListElement.appendChild(mobileListItem);
+            });
+            
+            if (!appState.isUserActive) scrollToHighlighted();
+        }
+
+        function scrollToHighlighted() {
+            const listContainer = appState.elements.listContainer;
+            const mobileListContainer = appState.elements.mobileListContainer;
+            const highlighted = appState.elements.wordList.querySelector('.word-highlight');
+            const mobileHighlighted = appState.elements.mobileWordList.querySelector('.word-highlight');
+            
+            if (highlighted && listContainer) {
+                const containerHeight = listContainer.clientHeight;
+                const itemHeight = highlighted.offsetHeight;
+                const itemTop = highlighted.offsetTop;
+                const scrollTop = itemTop - (containerHeight / 2) + (itemHeight / 2);
+                listContainer.scrollTo({ top: scrollTop, behavior: 'smooth' });
+            }
+            
+            if (mobileHighlighted && mobileListContainer) {
+                const containerHeight = mobileListContainer.clientHeight;
+                const itemHeight = mobileHighlighted.offsetHeight;
+                const itemTop = mobileHighlighted.offsetTop;
+                const scrollTop = itemTop - (containerHeight / 2) + (itemHeight / 2);
+                mobileListContainer.scrollTo({ top: scrollTop, behavior: 'smooth' });
+            }
+        }
+
+        function showOverlay() {
+            appState.elements.overlay.classList.add('active');
+            appState.elements.wordListContainer.classList.remove('hidden');
+            appState.elements.mobileWordListContainer.classList.remove('hidden');
+        }
+
+        function hideOverlay() {
+            appState.elements.overlay.classList.remove('active');
+            appState.elements.wordListContainer.classList.add('hidden');
+            appState.elements.mobileWordListContainer.classList.add('hidden');
+        }
+
+        function showMobileNav() {
+            appState.elements.mobileNav.classList.add('active');
+            appState.elements.mobileNavOverlay.classList.add('active');
+        }
+
+        // 修改隐藏移动导航函数，添加关闭所有子菜单的逻辑
+        function hideMobileNav() {
+            // 关闭所有移动端子菜单
+            appState.elements.mobileBookSubmenu.classList.add('hidden');
+            appState.elements.mobilePronSubmenu.classList.add('hidden');
+            
+            // 隐藏导航菜单
+            appState.elements.mobileNav.classList.remove('active');
+            appState.elements.mobileNavOverlay.classList.remove('active');
+        }
+
+        // 切换移动端子菜单
+        function toggleMobileSubmenu(submenuId) {
+            const submenu = document.getElementById(submenuId);
+            submenu.classList.toggle('hidden');
+        }
+
+        function toggleDropdown(dropdownId) {
+            document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+                if (dropdown.id !== dropdownId) dropdown.classList.remove('active');
+            });
+            document.getElementById(dropdownId).classList.toggle('active');
+        }
+
+        function closeAllDropdowns() {
+            document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+                dropdown.classList.remove('active');
+            });
+        }
+
+        function changeBook(bookKey) {
+            if (appState.currentBook === bookKey) return;
+            
+            appState.currentBook = bookKey;
+            appState.elements.currentBook.textContent = getBookDisplayName(bookKey);
+            appState.elements.mobileCurrentBook.textContent = getBookDisplayName(bookKey);
+            
+            localStorage.setItem(`${STORAGE_PREFIX}currentBook`, bookKey);
+            
+            if (appState.currentIndex >= appState.currentWordList.length) {
+                appState.currentIndex = 0;
+            }
+            
+            // 更新模式按钮文字
+            updateModeButtonText();
+            
+            updateWordDisplay();
+            renderWordList();
+            closeAllDropdowns();
+            hideMobileNav();
+            cacheAudioBatch(0);
+            
+            // 切换书本后更新下拉菜单，隐藏新选中项
+            updateBookDropdown();
+        }
+
+        // 切换发音源
+        function changePronSource(pronType) {
+            if (appState.currentPronType === pronType) return;
+            
+            appState.currentPronType = pronType;
+            localStorage.setItem(`${STORAGE_PREFIX}pronType`, pronType);
+            updatePronSourceDisplay();
+            closeAllDropdowns();
+            hideMobileNav();
+            
+            if (appState.currentWord) playWord();
+            cacheAudioBatch(0);
+            
+            // 切换发音源后更新下拉菜单，隐藏新选中项
+            updatePronDropdown();
+        }
+
+        function setupUserActionHandling() {
+            const listContainer = appState.elements.listContainer;
+            const mobileListContainer = appState.elements.mobileListContainer;
+            
+            listContainer.addEventListener('scroll', userActionDetected);
+            mobileListContainer.addEventListener('scroll', userActionDetected);
+            appState.elements.wordList.addEventListener('click', userActionDetected);
+            appState.elements.mobileWordList.addEventListener('click', userActionDetected);
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') userActionDetected();
+            });
+        }
+
+        function userActionDetected() {
+            appState.isUserActive = true;
+            clearTimeout(appState.userActionTimer);
+            appState.userActionTimer = setTimeout(() => {
+                appState.isUserActive = false;
+                scrollToHighlighted();
+            }, 5000);
+        }
+
+        function toggleImmersiveMode() {
+            appState.isImmersive = !appState.isImmersive;
+            
+            if (appState.isImmersive) {
+                appState.elements.navbar.style.transform = 'translateY(-100%)';
+                appState.elements.navbar.style.opacity = '0';
+                appState.elements.immersiveToggle.innerHTML = '<i class="fa-solid fa-compress"></i>';
+                appState.elements.mobileImmersiveToggle.innerHTML = '<i class="fa-solid fa-compress mr-2"></i> Immersive';
+                appState.elements.exitImmersiveBtn.classList.remove('hidden');
+            } else {
+                appState.elements.navbar.style.transform = 'translateY(0)';
+                appState.elements.navbar.style.opacity = '1';
+                appState.elements.immersiveToggle.innerHTML = '<i class="fa-solid fa-expand"></i>';
+                appState.elements.mobileImmersiveToggle.innerHTML = '<i class="fa-solid fa-expand mr-2"></i> Immersive';
+                appState.elements.exitImmersiveBtn.classList.add('hidden');
+            }
+            
+            hideMobileNav();
+        }
+
+        function toggleMode() {
+            stopPlayback();
+            appState.currentMode = appState.currentMode === 'collected' ? 'all' : 'collected';
+            
+            if (appState.currentIndex >= appState.currentWordList.length) {
+                appState.currentIndex = 0;
+            }
+            
+            // 更新模式按钮文字
+            updateModeButtonText();
+            
+            updateModeUI();
+            updateWordDisplay();
+            renderWordList();
+            userActionDetected();
+            hideMobileNav();
+        }
+
+        // 播放单词发音
+        function playWord() {
+            const word = appState.currentWord;
+            if (!word) return;
+            
+            const pronType = appState.currentPronType;
+            stopPlayback();
+            
+            checkAudioCache(word, pronType)
+                .then(cachedBlob => {
+                    if (cachedBlob) {
+                        const audioUrl = URL.createObjectURL(cachedBlob);
+                        playAudioFromUrl(audioUrl);
+                    } else {
+                        const audioUrl = `http://dict.youdao.com/dictvoice?audio=${encodeURIComponent(word)}&type=${pronType}`;
+                        playAudioFromUrl(audioUrl);
+                        fetchAndCacheAudio(word, pronType).catch(error => {
+                            console.error(`Failed to cache ${pronType === '2' ? 'American' : 'British'} audio for ${word}:`, error);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error in audio playback flow:', error);
+                    const audioUrl = `http://dict.youdao.com/dictvoice?audio=${encodeURIComponent(word)}&type=${pronType}`;
+                    playAudioFromUrl(audioUrl);
+                });
+        }
+
+       function playAudioFromUrl(audioUrl) {
+    stopPlayback();
+    
+    appState.audioElement = new Audio(audioUrl);
+    appState.isPlaying = true;
+    updatePlayButtonState();
+    
+    // 添加10秒超时计时器
+    appState.playTimeout = setTimeout(() => {
+        console.log("播放超时（10秒未完成）");
+        appState.isPlaying = false;
+        updatePlayButtonState();
+        showNotification("发音播放超时");
+        
+        if (appState.isAutoPlaying) {
+            nextWord();
+        }
+    }, 10000); // 10秒超时
+    
+    appState.audioElement.onended = () => {
+        // 清除超时计时器
+        clearTimeout(appState.playTimeout);
+        appState.isPlaying = false;
+        
+        if (appState.isAutoPlaying) {
+            appState.autoPlayTimer = setTimeout(nextWord, 700);
+        } else {
+            updatePlayButtonState();
+        }
+    };
+    
+    appState.audioElement.play().catch(error => {
+        // 清除超时计时器
+        clearTimeout(appState.playTimeout);
+        console.error("播放失败:", error);
+        appState.isPlaying = false;
+        updatePlayButtonState();
+        showNotification("发音播放失败");
+        
+        // 播放失败且处于自动播放模式时，直接播放下一个
+        if (appState.isAutoPlaying) {
+            setTimeout(nextWord, 500);
+        }
+    });
+}
+
+// 修改stopPlayback函数，确保清除超时计时器
+function stopPlayback() {
+    if (appState.audioElement) {
+        appState.audioElement.pause();
+        appState.audioElement.currentTime = 0;
+    }
+    
+    clearTimeout(appState.autoPlayTimer);
+    clearTimeout(appState.navigationTimer);
+    clearTimeout(appState.playTimeout); // 新增：清除播放超时计时器
+    
+    appState.isPlaying = false;
+    updatePlayButtonState();
+}
+        function updatePlayButtonState() {
+            if (appState.isAutoPlaying) {
+                appState.elements.playBtn.innerHTML = '<i class="fa-solid fa-stop mr-2"></i> Pause';
+                appState.elements.playBtn.classList.add('btn-active');
+            } else if (appState.isPlaying) {
+                appState.elements.playBtn.innerHTML = '<i class="fa-solid fa-pause mr-2"></i> Pause';
+                appState.elements.playBtn.classList.add('btn-active');
+            } else {
+                appState.elements.playBtn.innerHTML = '<i class="fa-solid fa-play mr-2"></i> Play';
+                appState.elements.playBtn.classList.remove('btn-active');
+            }
+        }
+
+        function stopPlayback() {
+            if (appState.audioElement) {
+                appState.audioElement.pause();
+                appState.audioElement.currentTime = 0;
+            }
+            
+            clearTimeout(appState.autoPlayTimer);
+            clearTimeout(appState.navigationTimer);
+            
+            appState.isPlaying = false;
+            updatePlayButtonState();
+        }
+
+        function togglePlayPause() {
+            if (appState.isPlaying) {
+                if (appState.audioElement) appState.audioElement.pause();
+                appState.isPlaying = false;
+            } else {
+                playWord();
+                appState.isPlaying = true;
+            }
+            updatePlayButtonState();
+        }
+
+        function toggleAutoPlay() {
+            appState.isAutoPlaying = !appState.isAutoPlaying;
+            
+            if (appState.isAutoPlaying) {
+                appState.elements.autoPlayBtn.innerHTML = '<i class="fa-solid fa-stop mr-2"></i> Auto play';
+                appState.elements.autoPlayBtn.classList.add('btn-active');
+                playWord();
+            } else {
+                appState.elements.autoPlayBtn.innerHTML = '<i class="fa-solid fa-repeat mr-2"></i> Auto play';
+                appState.elements.autoPlayBtn.classList.remove('btn-active');
+                stopPlayback();
+            }
+            
+            updatePlayButtonState();
+        }
+
+        function toggleSlowMode() {
+    appState.isSlow = !appState.isSlow;
+    
+    if (appState.isSlow) {
+        appState.elements.slowBtn.innerHTML = '<i class="fa-solid fa-clock mr-2"></i> Normal';
+        appState.elements.slowBtn.classList.add('btn-active');
+        showNotification("慢速模式已开启，语速为0.6倍");
+    } else {
+        appState.elements.slowBtn.innerHTML = '<i class="fa-solid fa-clock mr-2"></i> Slow';
+        appState.elements.slowBtn.classList.remove('btn-active');
+    }
+}
+
+function playAudioFromUrl(audioUrl) {
+    stopPlayback();
+    
+    appState.audioElement = new Audio(audioUrl);
+    appState.isPlaying = true;
+    updatePlayButtonState();
+    
+    // 根据慢速模式设置播放速度
+    if (appState.isSlow) {
+        appState.audioElement.playbackRate = 0.6;
+    }
+    
+    // 添加10秒超时计时器
+    appState.playTimeout = setTimeout(() => {
+        console.log("播放超时（10秒未完成）");
+        appState.isPlaying = false;
+        updatePlayButtonState();
+        showNotification("发音播放超时");
+        
+        if (appState.isAutoPlaying) {
+            nextWord();
+        }
+    }, 10000); // 10秒超时
+    
+    appState.audioElement.onended = () => {
+        // 清除超时计时器
+        clearTimeout(appState.playTimeout);
+        appState.isPlaying = false;
+        
+        if (appState.isAutoPlaying) {
+            appState.autoPlayTimer = setTimeout(nextWord, 700);
+        } else {
+            updatePlayButtonState();
+        }
+    };
+    
+    appState.audioElement.play().catch(error => {
+        // 清除超时计时器
+        clearTimeout(appState.playTimeout);
+        console.error("播放失败:", error);
+        appState.isPlaying = false;
+        updatePlayButtonState();
+        showNotification("发音播放失败");
+        
+        // 播放失败且处于自动播放模式时，直接播放下一个
+        if (appState.isAutoPlaying) {
+            setTimeout(nextWord, 500);
+        }
+    });
+}
+        function handleNavigation() {
+            clearTimeout(appState.navigationTimer);
+            
+            if (appState.isAutoPlaying) {
+                appState.navigationTimer = setTimeout(() => playWord(), 500);
+            } else {
+                appState.navigationTimer = setTimeout(() => playWord(), 500);
+            }
+        }
+
+        function nextWord() {
+            const list = appState.currentWordList;
+            if (list.length === 0) return;
+            
+            appState.currentIndex = (appState.currentIndex + 1) % list.length;
+            updateWordDisplay();
+            renderWordList(appState.elements.searchInput.value);
+            handleNavigation();
+        }
+
+        function prevWord() {
+            const list = appState.currentWordList;
+            if (list.length === 0) return;
+            
+            appState.currentIndex = (appState.currentIndex - 1 + list.length) % list.length;
+            updateWordDisplay();
+            renderWordList(appState.elements.searchInput.value);
+            handleNavigation();
+        }
+
+        function toggleCollection() {
+            const word = appState.currentWord;
+            if (!word) return;
+            
+            if (!appState.collectedWords[appState.currentBook]) {
+                appState.collectedWords[appState.currentBook] = [];
+            }
+            const collectedWords = appState.collectedWords[appState.currentBook];
+            const index = collectedWords.indexOf(word);
+            
+            if (index === -1) {
+                collectedWords.push(word);
+                showNotification(`Added "${word}" to ${getBookDisplayName(appState.currentBook)}`);
+            } else {
+                collectedWords.splice(index, 1);
+                showNotification(`Removed "${word}" from ${getBookDisplayName(appState.currentBook)}`);
+                
+                if (appState.currentMode === 'collected') {
+                    if (appState.currentIndex >= appState.currentWordList.length) {
+                        appState.currentIndex = Math.max(0, appState.currentWordList.length - 1);
+                    }
+                    updateWordDisplay();
+                    renderWordList(appState.elements.searchInput.value);
+                }
+            }
+            
+            localStorage.setItem(`${STORAGE_PREFIX}collectedWords`, JSON.stringify(appState.collectedWords));
+            updateAddButtonState();
+        }
+
+        function exportCollection() {
+            const collectedWords = appState.getCollectedWords();
+            if (collectedWords.length === 0) {
+                showNotification(`No words collected in ${getBookDisplayName(appState.currentBook)}`);
+                return;
+            }
+            
+            const text = collectedWords.join('\n');
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${getBookDisplayName(appState.currentBook).replace(/\//g, '-')}_collected_words.txt`;
+            document.body.appendChild(a);
+            a.click();
+            
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 0);
+            
+            showNotification(`Exported ${collectedWords.length} words from ${getBookDisplayName(appState.currentBook)}`);
+            hideMobileNav();
+        }
+
+        function handleSearch(e) {
+            const searchTerm = e.target.value.trim();
+            renderWordList(searchTerm);
+            
+            if (searchTerm.length > 0 || e.type === 'focus') {
+                showOverlay();
+            } else {
+                hideOverlay();
+            }
+        }
+        
+        function handleDocumentClick(e) {
+            // 关闭所有下拉菜单的逻辑
+            const dropdowns = document.querySelectorAll('.dropdown-content');
+            let isClickInsideDropdown = false;
+            
+            dropdowns.forEach(dropdown => {
+                if (dropdown.contains(e.target)) {
+                    isClickInsideDropdown = true;
+                }
+            });
+            
+            if (!isClickInsideDropdown) {
+                closeAllDropdowns();
+            }
+            
+            // 关闭搜索结果的逻辑
+            const searchInput = appState.elements.searchInput;
+            const mobileSearchInput = appState.elements.mobileSearchInput;
+            const searchContainer = searchInput.closest('div.relative');
+            const mobileSearchContainer = mobileSearchInput.closest('div.relative');
+            const listContainer = appState.elements.listContainer;
+            const mobileListContainer = appState.elements.mobileListContainer;
+            
+            const isClickInsideSearch = searchContainer.contains(e.target) || 
+                                       mobileSearchContainer.contains(e.target) ||
+                                       listContainer.contains(e.target) ||
+                                       mobileListContainer.contains(e.target);
+
+            // 点击任何外部区域（非搜索相关区域）都强制关闭列表
+            if (!isClickInsideSearch) {
+                // 直接操作DOM确保隐藏
+                appState.elements.wordListContainer.classList.add('hidden');
+                appState.elements.mobileWordListContainer.classList.add('hidden');
+                appState.elements.overlay.classList.remove('active');
+                
+                if (!searchInput.value.trim() && !mobileSearchInput.value.trim()) {
+                    renderWordList();
+                }
+            } else if (e.target === searchInput || e.target === mobileSearchInput) {
+                // 点击搜索框时强制显示列表
+                renderWordList(searchInput.value || mobileSearchInput.value);
+                appState.elements.wordListContainer.classList.remove('hidden');
+                appState.elements.mobileWordListContainer.classList.remove('hidden');
+                appState.elements.overlay.classList.add('active');
+            }
+        }
+        
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            const bgColor = appState.isDarkMode ? '#2B4158' : '#1D1D1F';
+            
+            notification.className = 'fixed bottom-6 right-6 text-white px-5 py-3 rounded-full shadow-lg z-50 transition-all duration-300 transform translate-y-0 opacity-100';
+            notification.style.backgroundColor = bgColor;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => notification.remove(), 300);
+            }, 2000);
+        }
+
+        function toggleDarkMode() {
+            appState.isDarkMode = !appState.isDarkMode;
+            document.documentElement.classList.toggle('dark', appState.isDarkMode);
+            document.body.classList.toggle('light', !appState.isDarkMode);
+            
+            if (appState.isDarkMode) {
+                appState.elements.darkModeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                appState.elements.mobileDarkModeToggle.innerHTML = '<i class="fa-solid fa-sun mr-2"></i> Dark mode';
+            } else {
+                appState.elements.darkModeToggle.innerHTML = '<i class="fa-regular fa-moon"></i>';
+                appState.elements.mobileDarkModeToggle.innerHTML = '<i class="fa-regular fa-moon mr-2"></i> Dark mode';
+            }
+            
+            localStorage.setItem(`${STORAGE_PREFIX}darkMode`, appState.isDarkMode);
+            hideMobileNav();
+        }
+
+        function setupEventListeners() {
+            // 桌面端按钮事件
+            appState.elements.immersiveToggle.addEventListener('click', toggleImmersiveMode);
+            appState.elements.exitImmersiveBtn.addEventListener('click', toggleImmersiveMode);
+            appState.elements.modeToggle.addEventListener('click', toggleMode);
+            appState.elements.prevBtn.addEventListener('click', prevWord);
+            appState.elements.playBtn.addEventListener('click', togglePlayPause);
+            appState.elements.nextBtn.addEventListener('click', nextWord);
+            appState.elements.slowBtn.addEventListener('click', toggleSlowMode);
+            appState.elements.autoPlayBtn.addEventListener('click', toggleAutoPlay);
+            appState.elements.addBtn.addEventListener('click', toggleCollection);
+            appState.elements.exportBtn.addEventListener('click', exportCollection);
+            appState.elements.darkModeToggle.addEventListener('click', toggleDarkMode);
+            
+            // 书本下拉菜单
+            appState.elements.bookSelector.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleDropdown('book-dropdown');
+            });
+            appState.elements.bookDropdownItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    changeBook(item.dataset.book);
+                });
+            });
+            
+            // 发音源下拉菜单
+            appState.elements.pronSourceSelector.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleDropdown('pron-source-dropdown');
+            });
+            appState.elements.pronSourceItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    changePronSource(item.dataset.pronType);
+                });
+            });
+            
+            // 移动端导航
+            appState.elements.hamburgerBtn.addEventListener('click', showMobileNav);
+            appState.elements.mobileNavOverlay.addEventListener('click', hideMobileNav);
+            
+            // 移动端书本菜单
+            appState.elements.mobileBookToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMobileSubmenu('mobile-book-submenu');
+            });
+            appState.elements.mobileBookItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    changeBook(item.dataset.book);
+                });
+            });
+            
+            // 移动端发音源菜单
+            appState.elements.mobilePronToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMobileSubmenu('mobile-pron-submenu');
+            });
+            appState.elements.mobilePronItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    changePronSource(item.dataset.pronType);
+                });
+            });
+            
+            // 移动端其他按钮
+            appState.elements.mobileModeToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMode();
+            });
+            appState.elements.mobileExportBtn.addEventListener('click', exportCollection);
+            appState.elements.mobileImmersiveToggle.addEventListener('click', toggleImmersiveMode);
+            appState.elements.mobileDarkModeToggle.addEventListener('click', toggleDarkMode);
+            
+            // 搜索框事件 - 直接绑定点击事件并强制显示列表
+            function forceShowWordList(inputElement) {
+                renderWordList(inputElement.value);
+                appState.elements.wordListContainer.classList.remove('hidden');
+                appState.elements.mobileWordListContainer.classList.remove('hidden');
+                appState.elements.overlay.classList.add('active');
+            }
+
+            // 桌面端搜索框
+            appState.elements.searchInput.addEventListener('click', function() {
+                forceShowWordList(this);
+            });
+            appState.elements.searchInput.addEventListener('focus', function() {
+                forceShowWordList(this);
+            });
+            appState.elements.searchInput.addEventListener('input', handleSearch);
+
+            // 移动端搜索框
+            appState.elements.mobileSearchInput.addEventListener('click', function() {
+                forceShowWordList(this);
+            });
+            appState.elements.mobileSearchInput.addEventListener('focus', function() {
+                forceShowWordList(this);
+            });
+            appState.elements.mobileSearchInput.addEventListener('input', handleSearch);
+            
+            // 全局点击事件
+            document.addEventListener('click', handleDocumentClick);
+            
+            // 键盘导航
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') prevWord();
+                else if (e.key === 'ArrowRight') nextWord();
+                else if (e.key === ' ') {
+                    e.preventDefault();
+                    togglePlayPause();
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
